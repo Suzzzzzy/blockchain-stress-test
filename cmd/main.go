@@ -1,39 +1,35 @@
 package main
 
 import (
-	"blockcain/internal/blockchain"
-	"blockcain/internal/config"
-	"blockcain/internal/database"
-	"blockcain/internal/stress"
+	"blockchain/internal/config"
+	"blockchain/internal/database"
+	"blockchain/internal/stress"
+	"blockchain/internal/util"
 	"log"
 	"time"
 )
 
 func main() {
-	cfg, err := config.LoadConfig()
+	logger := util.NewLogManager()
+
+	_, err := config.LoadConfig()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		logger.Error("failed to load config: " + err.Error())
 	}
 
 	db, err := database.Connect()
 	if err != nil {
-		log.Fatal("failed to connect to database: %v", err)
+		logger.Error("failed to connect to database: " + err.Error())
 	}
 
 	err = database.AutoMigrate(db)
 	if err != nil {
-		log.Fatalf("failed to migrate database: %v", err)
-	}
-
-	// 블록체인 클라이언트 초기화
-	client, err := blockchain.NewBlockChainClient(cfg.RPCURL, cfg.PrivateKey, cfg.FromAddress)
-	if err != nil {
-		log.Fatalf("failed to create blockchain client: %v", err)
+		logger.Error("failed to migrate database: " + err.Error())
 	}
 
 	// 스트레스 테스트 설정
 	stressConfig := stress.StressTestConfig{
-		NumTransaction:      1000,                 // 생성할 트랜잭션 수
+		NumTransactions:     1000,                 // 생성할 트랜잭션 수
 		TransactionInterval: 1 * time.Millisecond, // 트랜잭션 생성 간격
 	}
 

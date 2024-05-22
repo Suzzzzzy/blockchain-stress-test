@@ -1,24 +1,37 @@
 package database
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
 type Block struct {
-	gorm.Model
-	BlockNumber  uint          `gorm:"uniqueIndex"` // 블록 번호, 고유 인덱스
-	PreviousHash string        // 이전 블록의 해시
-	Timestamp    time.Time     // 블록 생성 시간
-	Transactions []Transaction `gorm:"foreignKey:BlockID"` // 블록에 포함된 트랜잭션 목록
+	// 블록의 고유 식별자
+	ID string
+	// 블록의 이전 해시값
+	PreviousHash string
+	// 블록의 생성 시간
+	Timestamp time.Time
+	// 블록에 포함된 트랜잭션들의 머클 루트 해시값
+	MerkleRootHash string
+	Transaction    []*Transaction
 }
 
 type Transaction struct {
-	gorm.Model
-	TransactionID string    `gorm:"uniqueIndex"` // 트랜잭션 ID, 고유 인덱스
-	BlockID       uint      // 트랜잭션이 포함된 블록의 ID
-	FromAddress   string    // 송신 주소
-	ToAddress     string    // 수신 주소
-	Amount        float64   // 송신 금액
-	Timestamp     time.Time // 트랜잭션 생성 시간
+	// 트랜잭션의 고유 식별자
+	ID          string
+	FromAddress string
+	ToAddress   string
+	// 트랜잭션의 금액
+	Amount float64
+	// 트랜잭션의 생성 시간
+	Timestamp time.Time
+}
+
+type Blockchain struct {
+	Block []*Block
+}
+
+// MerkleTree 해시트리
+type MerkleTree struct {
+	RootHash string
 }
