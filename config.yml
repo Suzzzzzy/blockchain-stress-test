@@ -1,1 +1,4 @@
 database_dsn: "host=localhost user=your_user password=your_password dbname=your_db port=5432 sslmode=disable TimeZone=Asia/Seoul"
+rpc_url: "http://localhost:8545"
+private_key: "private_key"
+from_address: "0xAddress"

@@ -6,7 +6,10 @@ import (
 
 // Config 설정 정보 관리, 쉽게 로드하기 위함
 type Config struct {
-	DatabaseDSN string
+	DatabaseDSN string `yaml:"database_dsn"`
+	RPCURL      string `yaml:"rpc_url"`
+	PrivateKey  string `yaml:"private_key"`
+	FromAddress string `yaml:"from_address"`
 }
 
 func LoadConfig() (*Config, error) {
