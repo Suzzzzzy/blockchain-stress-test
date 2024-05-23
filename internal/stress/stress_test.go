@@ -2,36 +2,50 @@ package stress
 
 import (
 	"blockchain/internal/database"
-	"log"
 	"testing"
 	"time"
 )
 
-// 스트레스 테스트 실행을 테스트하는 함수
 func TestRunStressTest(t *testing.T) {
-	db := &database.DatabaseManager{}
+	db, err := database.Connect()
+	if err != nil {
+		t.Errorf("failed to connect db")
+	}
+	con := database.NewDatabaseManager(db)
 
-	stressConfig := StressTestConfig{
-		NumBlocks:           10,                    // 테스트를 위한 블록 수
-		NumTransactions:     100,                   // 테스트를 위한 트랜잭션 수
-		BlockInterval:       10 * time.Millisecond, // 블록 생성 간격
-		TransactionInterval: 1 * time.Millisecond,  // 트랜잭션 생성 간격
+	if err != nil {
+		t.Fatalf("Failed to migrate database schema: %v", err)
 	}
 
-	metrics := RunStressTest(db, stressConfig)
-
-	// 블록 및 트랜잭션 수 확인
-	var blockCount int64
-	db.Model(&database.Block{}).Count(&blockCount)
-	if blockCount != int64(stressConfig.NumBlocks) {
-		t.Errorf("expected %d blocks, got %d", stressConfig.NumBlocks, blockCount)
+	// 스트레스 테스트 설정
+	config := StressTestConfig{
+		NumBlocks:           10,
+		NumTransactions:     100,
+		BlockInterval:       time.Millisecond * 100,
+		TransactionInterval: time.Millisecond * 50,
 	}
 
-	var transactionCount int64
-	db.Model(&database.Transaction{}).Count(&transactionCount)
-	if transactionCount != int64(stressConfig.NumTransactions) {
-		t.Errorf("expected %d transactions, got %d", stressConfig.NumTransactions, transactionCount)
+	metrics := RunStressTest(con, config)
+
+	// 결과 검증
+	if metrics.TotalBlocksCreated != config.NumBlocks {
+		t.Errorf("Expected %d blocks to be created, but got %d", config.NumBlocks, metrics.TotalBlocksCreated)
 	}
 
-	log.Printf("Stress test passed. Metrics: %+v", metrics)
+	if metrics.TotalTransactionsCreated != config.NumTransactions {
+		t.Errorf("Expected %d transactions to be created, but got %d", config.NumTransactions, metrics.TotalTransactionsCreated)
+	}
+
+	// 데이터베이스에 저장된 블록과 트랜잭션 수 확인
+	var blocksCount int64
+	db.Model(&database.Block{}).Count(&blocksCount)
+	if blocksCount != int64(config.NumBlocks) {
+		t.Errorf("Expected %d blocks to be stored in database, but got %d", config.NumBlocks, blocksCount)
+	}
+
+	var transactionsCount int64
+	db.Model(&database.Transaction{}).Count(&transactionsCount)
+	if transactionsCount != int64(config.NumTransactions) {
+		t.Errorf("Expected %d transactions to be stored in database, but got %d", config.NumTransactions, transactionsCount)
+	}
 }
