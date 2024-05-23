@@ -8,14 +8,62 @@ import (
 	"time"
 )
 
+type Blockchain struct {
+	Blocks       []*database.Block
+	Transactions map[string]*database.Transaction
+}
+
+// MerkleTree 해시트리
+type MerkleTree struct {
+	RootHash string
+}
+
 // NewBlock 함수는 새로운 블록을 생성합니다.
 func NewBlock(previousHash string, transactions []*database.Transaction) *database.Block {
 	merkleRootHash := calculateMerkleRootHash(transactions)
 	return &database.Block{
+		ID:             generateBlockID(), // 블록 ID 생성
 		PreviousHash:   previousHash,
 		Timestamp:      time.Now(),
 		MerkleRootHash: merkleRootHash,
+		Transactions:   transactions,
 	}
+}
+
+func NewBlockchain() *Blockchain {
+	return &Blockchain{
+		Blocks:       []*database.Block{},
+		Transactions: make(map[string]*database.Transaction),
+	}
+}
+
+func (bc *Blockchain) AddBlock(block *database.Block) {
+	bc.Blocks = append(bc.Blocks, block)
+	for _, tx := range block.Transactions {
+		bc.Transactions[tx.ID] = tx
+	}
+}
+
+func NewTransaction(from, to string, amount float64) *database.Transaction {
+	timestamp := time.Now()
+	txID := generateTransactionID(from, to, amount, timestamp)
+
+	return &database.Transaction{
+		ID:          txID,
+		FromAddress: from,
+		ToAddress:   to,
+		Amount:      amount,
+		Timestamp:   timestamp,
+	}
+}
+
+func generateTransactionID(from, to string, amount float64, timestamp time.Time) string {
+	// 트랜잭션의 고유 ID를 생성하기 위해 송신자, 수신자, 금액, 타임스탬프를 조합합니다.
+	data := from + to + strconv.FormatFloat(amount, 'f', -1, 64) + timestamp.String()
+
+	// 생성된 데이터에 대한 SHA-256 해시를 계산하여 반환합니다.
+	hash := sha256.Sum256([]byte(data))
+	return hex.EncodeToString(hash[:])
 }
 
 // calculateMerkleRootHash 함수는 주어진 트랜잭션들을 이용하여 머클 루트 해시를 계산합니다.
@@ -65,16 +113,6 @@ func calculateHash(data string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-// FindTransactionByID 함수는 특정 ID를 가진 트랜잭션을 찾습니다.
-func FindTransactionByID(blockchain []*database.Block, transactionID uint64) *database.Transaction {
-	// 블록체인의 모든 블록을 반복하면서 트랜잭션을 찾습니다.
-	for _, block := range blockchain {
-		// 블록에 포함된 모든 트랜잭션을 검색합니다.
-		for _, tx := range block.Transaction {
-			if tx.ID == transactionID {
-				return tx // 트랜잭션을 찾으면 반환합니다.
-			}
-		}
-	}
-	return nil // 트랜잭션을 찾지 못하면 nil을 반환합니다.
+func generateBlockID() string {
+	return hex.EncodeToString(sha256.New().Sum(nil))
 }
