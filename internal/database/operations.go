@@ -11,7 +11,7 @@ func NewDatabaseManager(db *gorm.DB) *DatabaseManager {
 }
 
 func (dm *DatabaseManager) AddBlock(block *Block) error {
-	result := db.Create(block)
+	result := dm.db.Create(block)
 	return result.Error
 }
 
@@ -31,6 +31,6 @@ func (dm *DatabaseManager) GetBlockByNumber(blockNumber uint) (*Block, error) {
 
 func (dm *DatabaseManager) GetTransactionByID(transactionID string) (*Transaction, error) {
 	var transaction Transaction
-	result := db.First(&transaction, "transaction_id = ?", transactionID)
+	result := dm.db.First(&transaction, "transaction_id = ?", transactionID)
 	return &transaction, result.Error
 }
