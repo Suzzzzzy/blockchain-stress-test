@@ -1,5 +1,5 @@
 # 프로젝트명 
-> product_manager_project
+> blockchain-stress-test
 
 # 프로젝트 설명
 블록체인 네트워크에 대한 스트레스 테스트 및 성능 최적화를 위한 도구를 개발한 프로젝트 입니다.
